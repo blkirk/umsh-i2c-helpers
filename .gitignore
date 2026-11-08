@@ -1,0 +1,21 @@
+# Build artifacts
+*.o
+*.so
+*.a
+*.dylib
+*.dll
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Local config
+*.local
+.env
