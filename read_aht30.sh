@@ -12,8 +12,29 @@ BUS="${2:-0}"
 ADDR="${3:-0x38}"
 NODE="${4:-}"
 
-# Build umshctl command with optional --node
-UMCTL="/home/blkirk/umsh/target/release/umshctl -p $DEVICE"
+# Determine umshctl path: env var UMSHCTL > PATH > common build locations
+if [ -n "${UMSHCTL:-}" ]; then
+    UMCTL="${UMSHCTL} -p $DEVICE"
+elif command -v umshctl &>/dev/null; then
+    UMCTL="umshctl -p $DEVICE"
+else
+    for candidate in \
+        "$HOME/umsh/target/release/umshctl" \
+        "/usr/local/bin/umshctl" \
+        "/opt/umsh/target/release/umshctl"; do
+        if [ -x "$candidate" ]; then
+            UMCTL="$candidate -p $DEVICE"
+            break
+        fi
+    done
+fi
+
+if [ -z "${UMCTL:-}" ]; then
+    echo "Error: umshctl not found. Set UMSHCTL env var or ensure umshctl is in PATH" >&2
+    exit 1
+fi
+
+# Add optional --node for remote I2C
 if [ -n "$NODE" ]; then
     UMCTL="$UMCTL --node $NODE"
 fi

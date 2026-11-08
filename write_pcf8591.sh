@@ -1,8 +1,9 @@
 #!/bin/bash
 # Write PCF8591 DAC (AOUT) via umshctl I2C commands
-# Usage: ./write_pcf8591.sh [device_path] [bus_number] [i2c_addr] [node_id] [dac_value]
-# Defaults: /dev/ttyACM0 bus 0 0x48 (no node) 0x80
+# Usage: ./write_pcf8591.sh [device_path] [bus_number] [i2c_addr] [node_id] [dac_value] [vref]
+# Defaults: /dev/ttyACM0 bus 0 0x48 (no node) 0x80 3.3
 # dac_value: 0x00 to 0xFF (0 to 255), hex or decimal
+# vref: reference voltage in volts (default 3.3V)
 #
 # node_id: optional UMSH node ID for remote I2C (e.g., 33Esi6D3bJfqQM4n9LYTirdzecBteAKNvgscfvjBd2Tp)
 #
@@ -19,9 +20,31 @@ BUS="${2:-0}"
 ADDR="${3:-0x48}"
 NODE="${4:-}"
 DAC_VAL="${5:-0x80}"
+VREF="${6:-3.3}"
 
-# Build umshctl command with optional --node
-UMCTL="/home/blkirk/umsh/target/release/umshctl -p $DEVICE"
+# Determine umshctl path: env var UMSHCTL > PATH > common build locations
+if [ -n "${UMSHCTL:-}" ]; then
+    UMCTL="${UMSHCTL} -p $DEVICE"
+elif command -v umshctl &>/dev/null; then
+    UMCTL="umshctl -p $DEVICE"
+else
+    for candidate in \
+        "$HOME/umsh/target/release/umshctl" \
+        "/usr/local/bin/umshctl" \
+        "/opt/umsh/target/release/umshctl"; do
+        if [ -x "$candidate" ]; then
+            UMCTL="$candidate -p $DEVICE"
+            break
+        fi
+    done
+fi
+
+if [ -z "${UMCTL:-}" ]; then
+    echo "Error: umshctl not found. Set UMSHCTL env var or ensure umshctl is in PATH" >&2
+    exit 1
+fi
+
+# Add optional --node for remote I2C
 if [ -n "$NODE" ]; then
     UMCTL="$UMCTL --node $NODE"
 fi
@@ -58,4 +81,4 @@ echo "DAC value: 0x$DAC_HEX ($DAC_DEC / 255)"
 # Write control byte + DAC value
 i2c_write "${CTRL_BYTE}${DAC_HEX}" >/dev/null
 
-echo "Done. AOUT voltage ≈ $(awk -v v="$DAC_DEC" 'BEGIN { printf "%.3f", v * 3.3 / 255.0 }')V (at 3.3V Vref)"
+echo "Done. AOUT voltage ≈ $(awk -v v="$DAC_DEC" -v vref="$VREF" 'BEGIN { printf "%.3f", v * vref / 255.0 }')V (at ${VREF}V Vref)"

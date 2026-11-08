@@ -86,15 +86,29 @@ The `node_id` is the UMSH node's public key (base58-encoded ed25519). When provi
 
 ### write_pcf8591.sh
 ```bash
-./write_pcf8591.sh [device] [bus] [addr] [node_id] [dac_value]
+./write_pcf8591.sh [device] [bus] [addr] [node_id] [dac_value] [vref]
 # dac_value: 0x00-0xFF (hex) or 0-255 (decimal), defaults to 0x80
+# vref defaults to 3.3V
 ```
 
 ## Requirements
 
-- `umshctl` binary at `/home/blkirk/umsh/target/release/umshctl`
+- `umshctl` binary — automatically found via:
+  1. `UMSHCTL` environment variable (full path to binary)
+  2. `umshctl` in `$PATH`
+  3. Common build locations: `~/umsh/target/release/umshctl`, `/usr/local/bin/umshctl`, `/opt/umsh/target/release/umshctl`
 - Access to serial device (typically `/dev/ttyACM0`)
 - For remote: UMSH network connectivity to target node
+
+### Setting UMSHCTL
+
+```bash
+# Option 1: Set in your shell profile
+export UMSHCTL=/home/youruser/umsh/target/release/umshctl
+
+# Option 2: One-time per script
+UMSHCTL=/path/to/umshctl ./read_ina219.sh /dev/ttyACM0 0 0x40
+```
 
 ## Example Output
 
