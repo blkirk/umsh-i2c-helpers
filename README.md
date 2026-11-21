@@ -11,6 +11,8 @@ Bash scripts for reading/writing common I2C sensors via `umshctl`. Supports both
 | `read_aht30.sh` | AHT30/AHT20/AHT21 | Humidity + temperature |
 | `read_pcf8591.sh` | PCF8591 | 4-channel 8-bit ADC + DAC |
 | `write_pcf8591.sh` | PCF8591 | Write DAC output (AOUT) |
+| `read_lm75.sh` | LM75 | Temperature sensor |
+| `shutdown_lm75.sh` | LM75 | Enable/disable shutdown mode |
 
 ## Usage
 
@@ -89,6 +91,24 @@ The `node_id` is the UMSH node's public key (base58-encoded ed25519). When provi
 ./write_pcf8591.sh [device] [bus] [addr] [node_id] [dac_value] [vref]
 # dac_value: 0x00-0xFF (hex) or 0-255 (decimal), defaults to 0x80
 # vref defaults to 3.3V
+```
+
+### read_lm75.sh
+```bash
+./read_lm75.sh [device] [bus] [addr] [node_id]
+# addr defaults to 0x48
+# Reads the temperature register (0x00): 9-bit two's complement,
+# 0.5 deg C per LSB, reported in deg C and deg F.
+```
+
+### shutdown_lm75.sh
+```bash
+./shutdown_lm75.sh enable|disable [device] [bus] [addr] [node_id]
+# enable  = shutdown mode (low current)
+# disable = normal operation
+# addr defaults to 0x48
+# Toggles config register bit 0 (0x01 = shutdown, 0x00 = normal)
+# Preserves other config register bits.
 ```
 
 ## Requirements
